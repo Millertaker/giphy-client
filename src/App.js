@@ -63,6 +63,8 @@ class App extends Component {
       results: []
     })
 
+    this.offset = 0;
+
     this.getApi();
   }
 
