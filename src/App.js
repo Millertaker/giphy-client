@@ -1,25 +1,86 @@
-import logo from './logo.svg';
-import './App.css';
+import './app.css';
+import { Component } from 'react';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+class App extends Component {
+  state = {
+    error: null,
+    message: null,
+    results: [],
+    search: null,
+    loader: null,
+  }
+
+  offset = 0;
+  limit = 50;
+
+  handleObserver = e => {
+    if(this.state.results.length > 0) {
+      this.getApi();
+    }
+  }
+
+  componentDidMount() {
+    this.observer = new IntersectionObserver(this.handleObserver, {
+      root: null,
+      rootMargin: '20px',
+      threshold: 1.0
+    });
+
+    this.observer.observe(document.querySelector('.ends'));
+  }
+
+  change = el => {
+    this.setState({
+      search: el.target.value
+    })
+  }
+
+  async getApi() {
+    try {
+      var request = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=Rl3uE3PVH5DQoGUV9BPiC4EZs52g2zc0&offset=${this.offset}&q=${this.state.search}`);
+      if(request.ok) {
+        var results = await request.json();
+        
+        this.setState({
+          results:  this.state.results.concat(results.data)
+        })
+
+        this.offset += this.limit;
+
+      } else {
+        throw new Error(`Error ${request.code }`)
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  submit = e => {
+    e.preventDefault();
+
+    this.setState({
+      results: []
+    })
+
+    this.getApi();
+  }
+
+  render(){
+    return (
+      <div className="container">
+        <h1>Gyphy api</h1>
+
+        <form action="" onSubmit={this.submit}>
+          <input type="text" onChange={this.change}/>
+          <input type="submit"/>
+        </form>
+
+        { this.state.results.length > 0 && this.state.results.map((e, i) => <img key={i} className="photo" src={e.images.downsized.url} alt=""/> )}
+        <div className="ends"> { this.state.results.length > 0 && <span>Loading...</span> }</div>
+      </div>
+    )
+  }
 }
 
 export default App;
